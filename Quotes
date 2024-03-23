@@ -1,0 +1,20 @@
+import scrapy
+from scrapy.spiders import CrawlSpider, Rule
+from scrapy.linkextractors import LinkExtractor
+
+class QuotesSpider(CrawlSpider):
+    name = "quotes"
+    start_urls = ["https://quotes.toscrape.com"]
+    rules = [
+        Rule(LinkExtractor(restrict_css=[".next", ".previous"]), callback="parse_item", follow=True),
+    ]
+
+    def parse_item(self, response):
+        container = response.css(".quote")
+        for quote in container:
+            yield {
+                "text": quote.css("span.text::text").get(),
+                "author": quote.css("small.author::text").get(),
+                "tags": quote.css("div.tags a::text").getall(),
+                "url": quote.css("div.tags a::attr(href)").get(),     
+            }
